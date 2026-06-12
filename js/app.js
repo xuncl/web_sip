@@ -148,6 +148,189 @@ const App = (function() {
         }
     }
 
+    // ── 日期导航 ──────────────────────────────────────
+
+    /**
+     * 跳转到指定日期，加载并渲染该日数据
+     */
+    async function navigateToDate(dateStr) {
+        const todayStr = GitHubAPI.getTodayStr();
+
+        AppState.update({ isLoading: true, errorMessage: null });
+
+        try {
+            // 1. 尝试加载该日期已有数据
+            const result = await GitHubAPI.loadDayData(dateStr);
+
+            if (result.error === 'TOKEN_INVALID') {
+                AppState.update({
+                    isLoading: false,
+                    showTokenDialog: true,
+                    errorMessage: 'Token 无效或已过期，请重新输入'
+                });
+                return;
+            }
+
+            let pageData;
+
+            if (result.data) {
+                // 已有 JSON，直接使用
+                pageData = result.data;
+            } else {
+                // 没有数据，尝试从更早的历史推导
+                const earlierData = await GitHubAPI.findLatestData(dateStr);
+
+                if (earlierData) {
+                    const gapDays = dateDiffDays(earlierData.date, dateStr);
+                    const missedDays = gapDays - 1;
+
+                    if (missedDays > 30) {
+                        pageData = {
+                            date: dateStr,
+                            tasks: null, // 标记无数据
+                            totalScore: 0,
+                            lastUpdated: null
+                        };
+                    } else if (missedDays <= 0) {
+                        const tasks = deriveTodayTasks(earlierData, TASK_TEMPLATE);
+                        pageData = {
+                            date: dateStr,
+                            tasks: tasks,
+                            totalScore: earlierData.totalScore || 0,
+                            lastUpdated: null
+                        };
+                    } else {
+                        const simResult = simulateMissedDays(earlierData, TASK_TEMPLATE, missedDays);
+                        if (simResult.freshStart) {
+                            pageData = {
+                                date: dateStr,
+                                tasks: null,
+                                totalScore: 0,
+                                lastUpdated: null
+                            };
+                        } else {
+                            pageData = {
+                                date: dateStr,
+                                tasks: simResult.tasks,
+                                totalScore: simResult.cumulativeTotal,
+                                lastUpdated: null
+                            };
+                        }
+                    }
+                } else {
+                    // 无任何历史
+                    pageData = {
+                        date: dateStr,
+                        tasks: dateStr >= todayStr ? deriveTodayTasks(null, TASK_TEMPLATE) : null,
+                        totalScore: 0,
+                        lastUpdated: null
+                    };
+                }
+            }
+
+            // 获取 SHA（用于后续更新）
+            let sha = result.sha;
+            if (!sha && Storage.getToken()) {
+                sha = await GitHubAPI.getFileSha(dateStr);
+            }
+
+            // 如果是今天且无数据，需要检查是否需要补录
+            let notice = null;
+            if (!result.data && dateStr === todayStr && pageData.tasks) {
+                // 检查是不是中断了多天
+                const latestData = await GitHubAPI.findLatestData(todayStr);
+                if (latestData) {
+                    const gapDays = dateDiffDays(latestData.date, todayStr);
+                    const missedDays = gapDays - 1;
+                    if (missedDays > 0 && missedDays <= 30) {
+                        // 触发了模拟，提示但没有补录（导航模式不自动补录）
+                        notice = `⚠️ 距上次记录 ${gapDays} 天，数据为模拟生成`;
+                    }
+                }
+            }
+
+            AppState.update({
+                currentDate: dateStr,
+                tasks: pageData.tasks || [],
+                totalScore: pageData.totalScore,
+                fileSha: sha,
+                lastUpdated: pageData.lastUpdated,
+                isLoading: false,
+                isDirty: false,
+                errorMessage: (pageData.tasks === null && dateStr < todayStr)
+                    ? `📅 ${dateStr} 无记录（可能超过30天未记录）`
+                    : notice
+            });
+
+            Storage.setCache(dateStr, pageData);
+
+        } catch (e) {
+            console.error('导航失败:', e);
+            AppState.update({
+                isLoading: false,
+                errorMessage: `加载失败: ${e.message}`
+            });
+        }
+    }
+
+    // ── 级联更新 ──────────────────────────────────────
+
+    /**
+     * 保存历史数据后，向前级联更新到今天
+     * 每一中间日重新推导并保存
+     */
+    async function cascadeRegenerate(fromDateStr) {
+        const todayStr = GitHubAPI.getTodayStr();
+        const token = Storage.getToken();
+        if (!token) return;
+
+        // 如果是今天，无需级联
+        if (fromDateStr === todayStr) return;
+
+        // 加载刚保存的起始日数据
+        let fromResult = await GitHubAPI.loadDayData(fromDateStr);
+        if (!fromResult.data) return;
+
+        let prevData = fromResult.data;
+        let prevDate = fromDateStr;
+
+        // 逐日向前更新
+        while (prevDate < todayStr) {
+            const nextDate = dateOffset(prevDate, 1);
+
+            // 推导下一天
+            const nextTasks = deriveTodayTasks(prevData, TASK_TEMPLATE);
+            const dayDelta = calculateTotal(nextTasks, 0); // 仅当天的贡献
+            const nextTotal = Math.max(0, (prevData.totalScore || 0) + dayDelta);
+
+            const nextData = {
+                date: nextDate,
+                tasks: nextTasks,
+                totalScore: nextTotal,
+                lastUpdated: new Date().toISOString()
+            };
+
+            // 获取 SHA（已有文件需要）
+            const sha = await GitHubAPI.getFileSha(nextDate);
+
+            // 保存
+            const saveResult = await GitHubAPI.saveDayData(nextDate, nextData, sha);
+            if (saveResult.error === 'TOKEN_INVALID') {
+                Storage.clearToken();
+                throw new Error('TOKEN_INVALID');
+            }
+            if (!saveResult.success) {
+                console.warn(`级联更新 ${nextDate} 保存失败:`, saveResult.error);
+            }
+
+            prevData = nextData;
+            prevDate = nextDate;
+        }
+
+        // 返回今天的数据
+        return prevData;
+    }
+
     // ── 用户操作 ──────────────────────────────────────
 
     /**
@@ -270,6 +453,47 @@ const App = (function() {
 
         if (result.success) {
             Storage.setCache(state.currentDate, saveData);
+
+            const todayStr = GitHubAPI.getTodayStr();
+
+            // 保存的是历史数据？级联更新到今天
+            if (state.currentDate < todayStr) {
+                try {
+                    const todayData = await cascadeRegenerate(state.currentDate);
+                    if (todayData) {
+                        // 获取今天的 SHA 并跳转
+                        const todaySha = await GitHubAPI.getFileSha(todayStr);
+                        AppState.update({
+                            currentDate: todayStr,
+                            tasks: todayData.tasks,
+                            totalScore: todayData.totalScore,
+                            fileSha: todaySha,
+                            lastUpdated: todayData.lastUpdated,
+                            isLoading: false,
+                            isDirty: false,
+                            errorMessage: null
+                        });
+                        Storage.setCache(todayStr, todayData);
+                        return;
+                    }
+                } catch (e) {
+                    if (e.message === 'TOKEN_INVALID') {
+                        AppState.update({
+                            isLoading: false,
+                            showTokenDialog: true,
+                            errorMessage: 'Token 无效，级联更新中断。请重新输入 Token'
+                        });
+                        return;
+                    }
+                    AppState.update({
+                        isLoading: false,
+                        errorMessage: `级联更新失败: ${e.message}`
+                    });
+                    return;
+                }
+            }
+
+            // 正常保存（今天）
             AppState.update({
                 fileSha: result.sha,
                 lastUpdated: saveData.lastUpdated,
@@ -422,7 +646,7 @@ const App = (function() {
         UI.render(state);
     });
 
-    return { init, onToggleTask, onUpdateNote, onSaveToken, onUpdate };
+    return { init, navigateToDate, onToggleTask, onUpdateNote, onSaveToken, onUpdate };
 
 })();
 

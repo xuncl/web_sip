@@ -64,17 +64,26 @@ const UI = (function() {
         const weekDay = weekDays[dateObj.getDay()];
         const dateDisplay = `${dateObj.getFullYear()}年${dateObj.getMonth() + 1}月${dateObj.getDate()}日 星期${weekDay}`;
 
+        const todayStr = GitHubAPI.getTodayStr();
+        const isToday = state.currentDate === todayStr;
+        const dateBadge = isToday ? '<span class="today-badge">今天</span>' : '<span class="history-badge">历史</span>';
+        const scoreLabel = isToday ? '今日总分' : '当日总分';
+
         const completedCount = state.tasks.filter(t => t.completed).length;
         const totalCount = state.tasks.length;
 
         return `
             <header class="app-header">
-                <div class="header-top">
-                    <h1 class="app-title">🏠 Web SIP</h1>
-                    <span class="header-date">${dateDisplay}</span>
+                <div class="nav-bar">
+                    <button class="nav-btn" id="btn-prev-day" title="前一天">◀</button>
+                    <div class="nav-date">
+                        <span class="header-date">${dateDisplay}</span>
+                        ${dateBadge}
+                    </div>
+                    <button class="nav-btn ${isToday ? 'nav-btn-disabled' : ''}" id="btn-next-day" title="${isToday ? '已是今天' : '后一天'}" ${isToday ? 'disabled' : ''}>▶</button>
                 </div>
                 <div class="header-score">
-                    <span class="score-label">今日总分</span>
+                    <span class="score-label">${scoreLabel}</span>
                     <span class="score-value">${state.totalScore} 分</span>
                     <span class="score-progress">完成 ${completedCount}/${totalCount}</span>
                 </div>
@@ -86,6 +95,7 @@ const UI = (function() {
                         🔑 设置 Token
                     </button>
                 </div>
+                ${!isToday ? '<button class="btn btn-back-today" id="btn-back-today">🔙 回到今天</button>' : ''}
                 ${state.isDirty ? '<div class="dirty-hint">⚠️ 有未保存的更改</div>' : ''}
                 ${state.lastUpdated ? `<div class="update-time">最后更新: ${formatTime(state.lastUpdated)}</div>` : ''}
             </header>
@@ -231,6 +241,29 @@ const UI = (function() {
     // ── 事件绑定 ──────────────────────────────────────
 
     function bindEvents(state) {
+        // 导航按钮
+        const btnPrevDay = document.getElementById('btn-prev-day');
+        if (btnPrevDay) {
+            btnPrevDay.addEventListener('click', () => {
+                App.navigateToDate(GitHubAPI.getDateStrBefore(state.currentDate, 1));
+            });
+        }
+
+        const btnNextDay = document.getElementById('btn-next-day');
+        if (btnNextDay && !btnNextDay.disabled) {
+            btnNextDay.addEventListener('click', () => {
+                const nextDate = GitHubAPI.getDateStrBefore(state.currentDate, -1);
+                App.navigateToDate(nextDate);
+            });
+        }
+
+        const btnBackToday = document.getElementById('btn-back-today');
+        if (btnBackToday) {
+            btnBackToday.addEventListener('click', () => {
+                App.navigateToDate(GitHubAPI.getTodayStr());
+            });
+        }
+
         // 更新按钮
         const btnUpdate = document.getElementById('btn-update');
         if (btnUpdate) {
