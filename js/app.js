@@ -46,31 +46,51 @@ const App = (function() {
                     const gapDays = dateDiffDays(latestData.date, todayStr);
                     const missedDays = gapDays - 1; // 中间缺失的天数
 
-                    let simResult;
                     if (missedDays <= 0) {
                         // 昨天有数据，正常推导
                         const tasks = deriveTodayTasks(latestData, TASK_TEMPLATE);
-                        simResult = { tasks, cumulativeTotal: latestData.totalScore || 0, freshStart: false };
-                    } else {
-                        // 有 N 天空白，模拟
-                        simResult = simulateMissedDays(latestData, TASK_TEMPLATE, missedDays);
-                    }
-
-                    if (simResult.freshStart) {
                         todayData = {
                             date: todayStr,
-                            tasks: simResult.tasks,
+                            tasks: tasks,
+                            totalScore: latestData.totalScore || 0,
+                            lastUpdated: null
+                        };
+                    } else if (missedDays > 30) {
+                        // 超过 30 天：全部归零
+                        freshStart = true;
+                        const tasks = TASK_TEMPLATE.map(tpl => ({
+                            id: tpl.id, name: tpl.name,
+                            baseScore: tpl.baseScore, increment: tpl.increment,
+                            maxScore: tpl.maxScore, isKeyTask: tpl.isKeyTask,
+                            sipScore: tpl.baseScore, completed: false, note: ''
+                        }));
+                        todayData = {
+                            date: todayStr,
+                            tasks: tasks,
                             totalScore: 0,
                             lastUpdated: null
                         };
-                        freshStart = true;
                     } else {
-                        todayData = {
-                            date: todayStr,
-                            tasks: simResult.tasks,
-                            totalScore: simResult.cumulativeTotal,
-                            lastUpdated: null
-                        };
+                        // 1~30 天缺失：逐日模拟并补录 JSON 到 GitHub
+                        try {
+                            const result = await backfillMissedDays(latestData, missedDays, todayStr);
+                            todayData = {
+                                date: todayStr,
+                                tasks: result.tasks,
+                                totalScore: result.totalScore,
+                                lastUpdated: null
+                            };
+                        } catch (e) {
+                            if (e.message === 'TOKEN_INVALID') {
+                                AppState.update({
+                                    isLoading: false,
+                                    showTokenDialog: true,
+                                    errorMessage: 'Token 无效，补录中断。请重新输入 Token'
+                                });
+                                return;
+                            }
+                            throw e;
+                        }
                     }
                 }
             } else {
@@ -303,6 +323,88 @@ const App = (function() {
         const from = new Date(fromStr + 'T00:00:00');
         const to = new Date(toStr + 'T00:00:00');
         return Math.round((to - from) / (1000 * 60 * 60 * 24));
+    }
+
+    /**
+     * 获取 N 天后的日期字符串
+     */
+    function dateOffset(fromStr, days) {
+        const d = new Date(fromStr + 'T00:00:00');
+        d.setDate(d.getDate() + days);
+        return GitHubAPI.formatDate(d);
+    }
+
+    /**
+     * 补录缺失日期的 JSON 文件（中断后逐日生成并保存）
+     * @returns {Object} { tasks, totalScore } — 今天的数据
+     */
+    async function backfillMissedDays(latestData, missedDays, todayStr) {
+        const token = Storage.getToken();
+        let prevData = latestData;
+        let cumulativeTotal = latestData.totalScore || 0;
+
+        for (let d = 0; d < missedDays; d++) {
+            const missedDate = dateOffset(latestData.date, d + 1);
+
+            // 检查该日期文件是否已存在（幂等性保证）
+            let dayData = null;
+            let daySha = null;
+
+            if (token) {
+                const existing = await GitHubAPI.loadDayData(missedDate);
+                if (existing.data) {
+                    // 文件已存在，直接复用
+                    dayData = existing.data;
+                    daySha = existing.sha;
+                }
+            }
+
+            if (!dayData) {
+                // 生成该日数据（全部未完成）
+                const dayTasks = deriveTodayTasks(prevData, TASK_TEMPLATE);
+
+                let dayPenalty = 0;
+                dayTasks.forEach(t => {
+                    if (t.isKeyTask) dayPenalty += t.sipScore;
+                });
+
+                cumulativeTotal = Math.max(0, cumulativeTotal - dayPenalty);
+
+                dayData = {
+                    date: missedDate,
+                    tasks: dayTasks.map(t => ({ ...t, completed: false })),
+                    totalScore: cumulativeTotal,
+                    lastUpdated: new Date().toISOString()
+                };
+
+                // 有 Token 则保存到 GitHub
+                if (token) {
+                    const saveResult = await GitHubAPI.saveDayData(missedDate, dayData, null);
+                    if (saveResult.error === 'TOKEN_INVALID') {
+                        Storage.clearToken();
+                        throw new Error('TOKEN_INVALID');
+                    }
+                    if (!saveResult.success) {
+                        console.warn(`补录 ${missedDate} 保存失败:`, saveResult.error);
+                    }
+                }
+            } else {
+                // 使用已有文件的累计总分
+                cumulativeTotal = dayData.totalScore || cumulativeTotal;
+            }
+
+            prevData = dayData;
+
+            // 显示进度
+            AppState.update({
+                isLoading: true,
+                errorMessage: `📝 正在补录缺失数据 (${d + 1}/${missedDays}) — ${missedDate}`
+            });
+        }
+
+        // 补录完成后，推导今天
+        const todayTasks = deriveTodayTasks(prevData, TASK_TEMPLATE);
+        return { tasks: todayTasks, totalScore: cumulativeTotal };
     }
 
     function saveCache(dateStr, tasks, totalScore) {
