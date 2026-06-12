@@ -21,7 +21,6 @@ const App = (function() {
             let result = await GitHubAPI.loadDayData(todayStr);
 
             if (result.error === 'TOKEN_INVALID') {
-                // Token 失效，提示重新输入
                 AppState.update({
                     isLoading: false,
                     showTokenDialog: true,
@@ -31,31 +30,66 @@ const App = (function() {
             }
 
             let todayData = result.data;
+            let freshStart = false;
 
             // 2. 当天没有数据，从历史推算
             if (!todayData) {
-                const yesterdayData = await GitHubAPI.findLatestData(todayStr);
-                const tasks = deriveTodayTasks(yesterdayData, TASK_TEMPLATE);
-                const totalScore = calculateTotal(tasks);
+                const latestData = await GitHubAPI.findLatestData(todayStr);
 
-                todayData = {
-                    date: todayStr,
-                    tasks: tasks,
-                    totalScore: totalScore,
-                    lastUpdated: null
-                };
+                if (!latestData) {
+                    // 无任何历史：第一天使用
+                    const tasks = deriveTodayTasks(null, TASK_TEMPLATE);
+                    const totalScore = 0;
+                    todayData = { date: todayStr, tasks, totalScore, lastUpdated: null };
+                } else {
+                    // 有历史数据，计算跨度和模拟
+                    const gapDays = dateDiffDays(latestData.date, todayStr);
+                    const missedDays = gapDays - 1; // 中间缺失的天数
+
+                    let simResult;
+                    if (missedDays <= 0) {
+                        // 昨天有数据，正常推导
+                        const tasks = deriveTodayTasks(latestData, TASK_TEMPLATE);
+                        simResult = { tasks, cumulativeTotal: latestData.totalScore || 0, freshStart: false };
+                    } else {
+                        // 有 N 天空白，模拟
+                        simResult = simulateMissedDays(latestData, TASK_TEMPLATE, missedDays);
+                    }
+
+                    if (simResult.freshStart) {
+                        todayData = {
+                            date: todayStr,
+                            tasks: simResult.tasks,
+                            totalScore: 0,
+                            lastUpdated: null
+                        };
+                        freshStart = true;
+                    } else {
+                        todayData = {
+                            date: todayStr,
+                            tasks: simResult.tasks,
+                            totalScore: simResult.cumulativeTotal,
+                            lastUpdated: null
+                        };
+                    }
+                }
             } else {
-                // 已有数据，重新计算总分（以防手动修改过 JSON）
-                todayData.totalScore = calculateTotal(todayData.tasks);
+                // 已有当天数据：totalScore 保持原值（是累计值）
+                // 不需要重新计算，直接使用存储的值
             }
 
-            // 3. 获取 SHA（如果通过 raw 读取的可能没有 sha）
+            // 3. 获取 SHA
             let sha = result.sha;
             if (!sha && Storage.getToken()) {
                 sha = await GitHubAPI.getFileSha(todayStr);
             }
 
             // 4. 更新状态并渲染
+            let notice = null;
+            if (freshStart) {
+                notice = '⚠️ 超过30天未记录，总分已归零重新开始';
+            }
+
             AppState.update({
                 tasks: todayData.tasks,
                 totalScore: todayData.totalScore,
@@ -63,13 +97,13 @@ const App = (function() {
                 lastUpdated: todayData.lastUpdated,
                 isLoading: false,
                 isDirty: false,
-                errorMessage: null
+                errorMessage: notice
             });
 
             // 5. 缓存到本地
             Storage.setCache(todayStr, todayData);
 
-            // 6. 检查是否需要 Token（第一次使用）
+            // 6. 检查是否需要 Token
             if (!Storage.getToken()) {
                 AppState.update({ showTokenDialog: true });
             }
@@ -84,10 +118,9 @@ const App = (function() {
             // 尝试从缓存恢复
             const cached = Storage.getCache(todayStr);
             if (cached) {
-                cached.totalScore = calculateTotal(cached.tasks);
                 AppState.update({
                     tasks: cached.tasks,
-                    totalScore: cached.totalScore,
+                    totalScore: cached.totalScore || calculateTotal(cached.tasks, 0),
                     lastUpdated: cached.lastUpdated,
                     errorMessage: '⚠️ 网络加载失败，使用本地缓存数据'
                 });
@@ -98,27 +131,47 @@ const App = (function() {
     // ── 用户操作 ──────────────────────────────────────
 
     /**
-     * 切换任务完成状态
+     * 切换任务完成状态（累计总分增量模式）
      */
     function onToggleTask(index, completed) {
         const state = AppState.getSnapshot();
-        const tasks = state.tasks.map((t, i) => {
-            if (i === index) {
-                return { ...t, completed: completed };
-            }
-            return t;
-        });
+        const task = state.tasks[index];
+        const wasCompleted = task.completed;
 
-        const totalScore = calculateTotal(tasks);
+        // 无变化，跳过
+        if (wasCompleted === completed) return;
+
+        let newTotal = state.totalScore;
+
+        if (completed) {
+            // 勾选完成 → 加分
+            newTotal += task.sipScore;
+            if (task.isKeyTask) {
+                // 关键任务额外加分（抵消之前的扣分）
+                newTotal += task.sipScore;
+            }
+        } else {
+            // 取消勾选 → 扣分
+            newTotal -= task.sipScore;
+            if (task.isKeyTask) {
+                // 关键任务额外扣分（施加惩罚）
+                newTotal -= task.sipScore;
+            }
+        }
+
+        newTotal = Math.max(0, newTotal);
+
+        const tasks = state.tasks.map((t, i) =>
+            i === index ? { ...t, completed: completed } : t
+        );
 
         AppState.update({
             tasks: tasks,
-            totalScore: totalScore,
+            totalScore: newTotal,
             isDirty: true
         });
 
-        // 同步更新本地缓存
-        saveCache(state.currentDate, tasks, totalScore);
+        saveCache(state.currentDate, tasks, newTotal);
     }
 
     /**
@@ -175,11 +228,11 @@ const App = (function() {
             return;
         }
 
-        // 构建要保存的数据
+        // 构建要保存的数据（totalScore 是累计值）
         const saveData = {
             date: state.currentDate,
             tasks: state.tasks,
-            totalScore: calculateTotal(state.tasks),
+            totalScore: state.totalScore,
             lastUpdated: new Date().toISOString()
         };
 
@@ -242,6 +295,15 @@ const App = (function() {
     }
 
     // ── 内部工具 ──────────────────────────────────────
+
+    /**
+     * 计算两个日期字符串之间的天数差
+     */
+    function dateDiffDays(fromStr, toStr) {
+        const from = new Date(fromStr + 'T00:00:00');
+        const to = new Date(toStr + 'T00:00:00');
+        return Math.round((to - from) / (1000 * 60 * 60 * 24));
+    }
 
     function saveCache(dateStr, tasks, totalScore) {
         Storage.setCache(dateStr, {
