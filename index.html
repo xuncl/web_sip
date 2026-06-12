@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Web SIP — 自我提升平台，用游戏化的方式坚持每日任务">
+    <meta name="theme-color" content="#2563eb">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Web SIP</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app-root">
+        <div class="loading-container">
+            <div class="spinner"></div>
+            <p>加载中...</p>
+        </div>
+    </div>
+
+    <!-- JS 依赖顺序：底层 → 上层 -->
+    <script src="js/config.js"></script>
+    <script src="js/template.js"></script>
+    <script src="js/sip-engine.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/github-api.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
