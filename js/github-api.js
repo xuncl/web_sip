@@ -72,11 +72,33 @@ const GitHubAPI = (function() {
     // ── 读取 ──────────────────────────────────────────
 
     /**
-     * 通过 raw.githubusercontent.com 获取某天数据（公开访问，无需 Token）
+     * 带超时的 fetch 封装
+     */
+    function fetchWithTimeout(url, options, timeoutMs) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        return fetch(url, { ...options, signal: controller.signal }).finally(() => {
+            clearTimeout(timer);
+        });
+    }
+
+    /**
+     * 判断是否为网络层错误（连接失败、DNS 失败等，非 HTTP 错误）
+     */
+    function isNetworkError(err) {
+        return err.name === 'TypeError' || err.name === 'AbortError' ||
+               err.message === 'Failed to fetch' ||
+               err.message.includes('NetworkError') ||
+               err.message.includes('network');
+    }
+
+    /**
+     * 通过 raw.githubusercontent.com 获取某天数据
+     * raw 不稳定的环境下可能失败
      */
     function fetchRaw(dateStr) {
         const url = `${CONFIG.rawBase}/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/${CONFIG.dataPath}/${dateStr}.json`;
-        return fetch(url).then(res => {
+        return fetchWithTimeout(url, {}, 8000).then(res => {
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             return res.json();
         });
@@ -90,12 +112,12 @@ const GitHubAPI = (function() {
         if (!token) return Promise.reject(new Error('NO_TOKEN'));
 
         const url = `${CONFIG.apiBase}/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${CONFIG.dataPath}/${dateStr}.json`;
-        return fetch(url, {
+        return fetchWithTimeout(url, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'application/vnd.github.v3+json'
             }
-        }).then(res => {
+        }, 10000).then(res => {
             if (res.status === 401) {
                 Storage.clearToken();
                 throw new Error('TOKEN_INVALID');
@@ -121,22 +143,13 @@ const GitHubAPI = (function() {
 
     /**
      * 加载某天的数据
-     * 优先用 raw 读取（快），失败时 fallback 到 API 读取
+     * 有 Token 时优先走鉴权 API（更稳定），无 Token 时走 raw
      * 返回 { data, sha } — sha 为 null 代表需要新建文件
      */
     async function loadDayData(dateStr) {
-        // 1. 先尝试 raw 直读（速度快，不走认证额度）
-        try {
-            const data = await fetchRaw(dateStr);
-            // raw 读取成功，但不知道 sha，后续写入需要用 API 获取
-            // 这里先返回 sha=null 表示"未知"，写入前再获取
-            return { data: data, sha: null };
-        } catch (e) {
-            // raw 404，尝试 API 读取
-        }
-
-        // 2. 检查 Token，有则走 API
         const token = Storage.getToken();
+
+        // 有 Token：优先 API（更稳定可靠）
         if (token) {
             try {
                 return await fetchWithAuth(dateStr);
@@ -144,29 +157,87 @@ const GitHubAPI = (function() {
                 if (e.message === 'TOKEN_INVALID') {
                     return { data: null, sha: null, error: 'TOKEN_INVALID' };
                 }
-                if (e.message !== 'NOT_FOUND') {
-                    console.error('API 读取失败:', e);
+                if (e.message === 'NOT_FOUND') {
+                    // 文件不存在，fallback 继续
+                } else {
+                    // API 调用本身失败（网络问题），尝试 raw
+                    console.warn('API 读取失败，尝试 raw:', e.message);
+                    try {
+                        const data = await fetchRaw(dateStr);
+                        return { data: data, sha: null };
+                    } catch (e2) {
+                        // raw 也失败
+                    }
+                }
+            }
+        } else {
+            // 无 Token：只能走 raw
+            try {
+                const data = await fetchRaw(dateStr);
+                return { data: data, sha: null };
+            } catch (e) {
+                if (e.message.startsWith('HTTP 404')) {
+                    // 文件不存在
                 }
             }
         }
 
-        // 3. 当天文件不存在
+        // 当天文件不存在
         return { data: null, sha: null, error: 'NOT_FOUND' };
     }
 
     /**
      * 回溯查找最近的已有数据（最多 30 天）
-     * 用于当天 JSON 不存在时推算今天的 sipScore
+     * 有 Token 走鉴权 API，无 Token 走 raw
+     * 网络层错误立即停止回溯
      */
     async function findLatestData(dateStr) {
+        const token = Storage.getToken();
+
+        // 选择读取策略
+        async function tryFetch(prevDate) {
+            if (token) {
+                try {
+                    const result = await fetchWithAuth(prevDate);
+                    return result.data;
+                } catch (e) {
+                    if (e.message === 'TOKEN_INVALID') throw e;
+                    if (e.message === 'NOT_FOUND') return null;
+                    // 网络错误：快速短路
+                    if (isNetworkError(e)) throw new Error('NETWORK_ERROR');
+                    return null;
+                }
+            } else {
+                try {
+                    return await fetchRaw(prevDate);
+                } catch (e) {
+                    const msg = e.message || '';
+                    if (msg.startsWith('HTTP 404') || msg.startsWith('HTTP 403')) {
+                        return null; // 文件不存在，继续
+                    }
+                    // 网络错误：快速短路
+                    if (isNetworkError(e)) throw new Error('NETWORK_ERROR');
+                    return null;
+                }
+            }
+        }
+
+        let networkErrors = 0;
         for (let i = 1; i <= CONFIG.maxBacktrackDays; i++) {
             const prevDate = getDateStrBefore(dateStr, i);
             try {
-                const data = await fetchRaw(prevDate);
-                return data;
+                const data = await tryFetch(prevDate);
+                if (data) return data;
             } catch (e) {
-                // 404，继续往前找
-                continue;
+                if (e.message === 'TOKEN_INVALID') throw e;
+                if (e.message === 'NETWORK_ERROR') {
+                    networkErrors++;
+                    // 连续 2 次网络错误则停止回溯
+                    if (networkErrors >= 2) {
+                        console.warn('连续网络错误，停止回溯');
+                        return null;
+                    }
+                }
             }
         }
         return null;
@@ -174,7 +245,6 @@ const GitHubAPI = (function() {
 
     /**
      * 获取文件 SHA（更新时需要）
-     * 只在 raw 读取成功但需要 SHA 时调用
      */
     async function getFileSha(dateStr) {
         const token = Storage.getToken();
@@ -182,12 +252,12 @@ const GitHubAPI = (function() {
 
         const url = `${CONFIG.apiBase}/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${CONFIG.dataPath}/${dateStr}.json`;
         try {
-            const res = await fetch(url, {
+            const res = await fetchWithTimeout(url, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Accept': 'application/vnd.github.v3+json'
                 }
-            });
+            }, 10000);
             if (res.status === 404) return null;  // 文件不存在，无需 sha
             if (!res.ok) return null;
             const data = await res.json();
