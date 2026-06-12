@@ -142,14 +142,33 @@ const GitHubAPI = (function() {
     }
 
     /**
-     * 加载某天的数据
-     * 有 Token 时优先走鉴权 API（更稳定），无 Token 时走 raw
-     * 返回 { data, sha } — sha 为 null 代表需要新建文件
+     * 单次读取策略：优先 raw（零 API 额度），网络失败时 API 兜底
+     * @returns {Object} { data, sha, source } — source: 'raw' | 'api'
      */
-    async function loadDayData(dateStr) {
+    async function smartFetch(dateStr) {
         const token = Storage.getToken();
 
-        // 有 Token：优先 API（更稳定可靠）
+        // 1. 优先 raw（不耗 API 额度，速度快）
+        try {
+            const data = await fetchRaw(dateStr);
+            return { data: data, sha: null, source: 'raw' };
+        } catch (e) {
+            const msg = e.message || '';
+            // HTTP 404 → 文件真的不存在，直接返回
+            if (msg.startsWith('HTTP 404')) {
+                return { data: null, sha: null, error: 'NOT_FOUND', source: 'raw' };
+            }
+            // 其他 HTTP 错误（403 等）→ 文件不存在或不可访问
+            if (msg.startsWith('HTTP ')) {
+                return { data: null, sha: null, error: 'NOT_FOUND', source: 'raw' };
+            }
+            // 网络错误 → raw 不可达，尝试 API
+            if (!token) {
+                return { data: null, sha: null, error: 'NETWORK_ERROR', source: 'raw' };
+            }
+        }
+
+        // 2. raw 网络失败，API 兜底
         if (token) {
             try {
                 return await fetchWithAuth(dateStr);
@@ -157,86 +176,40 @@ const GitHubAPI = (function() {
                 if (e.message === 'TOKEN_INVALID') {
                     return { data: null, sha: null, error: 'TOKEN_INVALID' };
                 }
-                if (e.message === 'NOT_FOUND') {
-                    // 文件不存在，fallback 继续
-                } else {
-                    // API 调用本身失败（网络问题），尝试 raw
-                    console.warn('API 读取失败，尝试 raw:', e.message);
-                    try {
-                        const data = await fetchRaw(dateStr);
-                        return { data: data, sha: null };
-                    } catch (e2) {
-                        // raw 也失败
-                    }
-                }
-            }
-        } else {
-            // 无 Token：只能走 raw
-            try {
-                const data = await fetchRaw(dateStr);
-                return { data: data, sha: null };
-            } catch (e) {
-                if (e.message.startsWith('HTTP 404')) {
-                    // 文件不存在
-                }
+                return { data: null, sha: null, error: 'NOT_FOUND' };
             }
         }
 
-        // 当天文件不存在
         return { data: null, sha: null, error: 'NOT_FOUND' };
     }
 
     /**
+     * 加载某天的数据
+     */
+    async function loadDayData(dateStr) {
+        return smartFetch(dateStr);
+    }
+
+    /**
      * 回溯查找最近的已有数据（最多 30 天）
-     * 有 Token 走鉴权 API，无 Token 走 raw
-     * 网络层错误立即停止回溯
+     * 优先 raw，每步只需一次请求
      */
     async function findLatestData(dateStr) {
-        const token = Storage.getToken();
+        let consecutiveNetworkErrors = 0;
 
-        // 选择读取策略
-        async function tryFetch(prevDate) {
-            if (token) {
-                try {
-                    const result = await fetchWithAuth(prevDate);
-                    return result.data;
-                } catch (e) {
-                    if (e.message === 'TOKEN_INVALID') throw e;
-                    if (e.message === 'NOT_FOUND') return null;
-                    // 网络错误：快速短路
-                    if (isNetworkError(e)) throw new Error('NETWORK_ERROR');
-                    return null;
-                }
-            } else {
-                try {
-                    return await fetchRaw(prevDate);
-                } catch (e) {
-                    const msg = e.message || '';
-                    if (msg.startsWith('HTTP 404') || msg.startsWith('HTTP 403')) {
-                        return null; // 文件不存在，继续
-                    }
-                    // 网络错误：快速短路
-                    if (isNetworkError(e)) throw new Error('NETWORK_ERROR');
-                    return null;
-                }
-            }
-        }
-
-        let networkErrors = 0;
         for (let i = 1; i <= CONFIG.maxBacktrackDays; i++) {
             const prevDate = getDateStrBefore(dateStr, i);
-            try {
-                const data = await tryFetch(prevDate);
-                if (data) return data;
-            } catch (e) {
-                if (e.message === 'TOKEN_INVALID') throw e;
-                if (e.message === 'NETWORK_ERROR') {
-                    networkErrors++;
-                    // 连续 2 次网络错误则停止回溯
-                    if (networkErrors >= 2) {
-                        console.warn('连续网络错误，停止回溯');
-                        return null;
-                    }
+            const result = await smartFetch(prevDate);
+
+            if (result.data) return result.data;
+
+            if (result.error === 'TOKEN_INVALID') throw new Error('TOKEN_INVALID');
+
+            if (result.error === 'NETWORK_ERROR') {
+                consecutiveNetworkErrors++;
+                if (consecutiveNetworkErrors >= 2) {
+                    console.warn('raw 连续网络错误，停止回溯');
+                    return null;
                 }
             }
         }
