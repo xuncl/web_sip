@@ -53,7 +53,7 @@
       "maxScore": 10,
       "isKeyTask": false,
       "sipScore": 2,
-      "completed": false,
+      "completed": true,
       "note": ""
     },
     {
@@ -101,6 +101,6 @@
       "note": ""
     }
   ],
-  "totalScore": 10,
-  "lastUpdated": "2026-06-12T07:15:55.845Z"
+  "totalScore": 12,
+  "lastUpdated": "2026-06-13T08:05:13.474Z"
 }
