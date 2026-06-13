@@ -10,7 +10,7 @@
       "isKeyTask": true,
       "sipScore": 3,
       "completed": false,
-      "note": ""
+      "note": "周报发老板，ppt美化"
     },
     {
       "id": "career",
@@ -21,7 +21,7 @@
       "isKeyTask": true,
       "sipScore": 3,
       "completed": false,
-      "note": ""
+      "note": "有色其他行业研报"
     },
     {
       "id": "self-improve",
@@ -31,8 +31,8 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 3,
-      "completed": false,
-      "note": ""
+      "completed": true,
+      "note": "增加内容功能"
     },
     {
       "id": "family",
@@ -42,8 +42,8 @@
       "maxScore": 10,
       "isKeyTask": false,
       "sipScore": 2,
-      "completed": false,
-      "note": ""
+      "completed": true,
+      "note": "理发&洗衣服"
     },
     {
       "id": "initiative",
@@ -54,7 +54,7 @@
       "isKeyTask": false,
       "sipScore": 3,
       "completed": false,
-      "note": ""
+      "note": "尝试制作视频"
     },
     {
       "id": "exercise",
@@ -64,7 +64,7 @@
       "maxScore": 10,
       "isKeyTask": false,
       "sipScore": 3,
-      "completed": false,
+      "completed": true,
       "note": ""
     },
     {
@@ -101,6 +101,6 @@
       "note": ""
     }
   ],
-  "totalScore": 12,
-  "lastUpdated": "2026-06-13T08:05:24.138Z"
+  "totalScore": 23,
+  "lastUpdated": "2026-06-13T08:20:27.120Z"
 }
