@@ -31,6 +31,7 @@ const UI = (function() {
         const tasksHtml = renderTaskList(state.tasks);
         const footerHtml = renderFooter(state);
         const dialogHtml = state.showTokenDialog ? renderTokenDialog(state.errorMessage) : '';
+        const importHtml = state.showImportDialog ? renderImportDialog() : '';
 
         rootEl.innerHTML = `
             <div class="app-container">
@@ -42,6 +43,7 @@ const UI = (function() {
                 ${footerHtml}
             </div>
             ${dialogHtml}
+            ${importHtml}
         `;
 
         bindEvents(state);
@@ -93,6 +95,9 @@ const UI = (function() {
                     </button>
                     <button class="btn btn-secondary btn-token" id="btn-token">
                         🔑 设置 Token
+                    </button>
+                    <button class="btn btn-secondary btn-import" id="btn-import">
+                        📋 导入笔记
                     </button>
                 </div>
                 ${!isToday ? '<button class="btn btn-back-today" id="btn-back-today">🔙 回到今天</button>' : ''}
@@ -238,9 +243,46 @@ const UI = (function() {
         `;
     }
 
+    function renderImportDialog() {
+        return `
+            <div class="dialog-overlay" id="import-dialog">
+                <div class="dialog-card dialog-wide">
+                    <h2>📋 导入笔记</h2>
+                    <p class="dialog-desc">
+                        粘贴 Markdown 任务列表，自动匹配任务名并填写备注。<br>
+                        支持格式：<code>- [ ] 任务名：内容</code> 或 <code>任务名：内容</code>
+                    </p>
+                    <textarea class="dialog-textarea" id="import-textarea"
+                              placeholder="- [ ] 工作：周报发老板，ppt美化&#10;- [ ] 事业：有色其他行业研报&#10;- [ ] 自我提升：增加内容功能&#10;家庭生活：理发&洗衣服&#10;主动性：尝试制作视频"
+                              rows="8"></textarea>
+                    <label class="checkbox-label" style="margin-bottom: 12px;">
+                        <input type="checkbox" id="import-mark-completed" checked>
+                        同时将匹配到的任务标记为完成
+                    </label>
+                    <div id="import-result" class="import-result" style="display:none;"></div>
+                    <div class="dialog-actions">
+                        <button class="btn btn-link" id="btn-clear-import">清空</button>
+                        <div class="dialog-buttons">
+                            <button class="btn btn-secondary" id="btn-cancel-import">取消</button>
+                            <button class="btn btn-primary" id="btn-confirm-import">解析并填写</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     // ── 事件绑定 ──────────────────────────────────────
 
     function bindEvents(state) {
+        // 导入笔记按钮
+        const btnImport = document.getElementById('btn-import');
+        if (btnImport) {
+            btnImport.addEventListener('click', () => {
+                AppState.update({ showImportDialog: true });
+            });
+        }
+
         // 导航按钮
         const btnPrevDay = document.getElementById('btn-prev-day');
         if (btnPrevDay) {
@@ -339,6 +381,41 @@ const UI = (function() {
                 if (e.key === 'Enter') {
                     App.onSaveToken(tokenInput.value.trim());
                 }
+            });
+        }
+
+        // 导入对话框 — 确认
+        const btnConfirmImport = document.getElementById('btn-confirm-import');
+        if (btnConfirmImport) {
+            btnConfirmImport.addEventListener('click', () => {
+                const textarea = document.getElementById('import-textarea');
+                const markCompleted = document.getElementById('import-mark-completed');
+                const text = textarea ? textarea.value : '';
+                const mark = markCompleted ? markCompleted.checked : false;
+                App.parseAndImport(text, mark);
+            });
+        }
+
+        // 导入对话框 — 取消/关闭
+        const closeImport = () => AppState.update({ showImportDialog: false });
+        const btnCancelImport = document.getElementById('btn-cancel-import');
+        if (btnCancelImport) btnCancelImport.addEventListener('click', closeImport);
+
+        const importDialog = document.getElementById('import-dialog');
+        if (importDialog) {
+            importDialog.addEventListener('click', (e) => {
+                if (e.target === importDialog) closeImport();
+            });
+        }
+
+        // 导入对话框 — 清空
+        const btnClearImport = document.getElementById('btn-clear-import');
+        if (btnClearImport) {
+            btnClearImport.addEventListener('click', () => {
+                const textarea = document.getElementById('import-textarea');
+                if (textarea) textarea.value = '';
+                const result = document.getElementById('import-result');
+                if (result) result.style.display = 'none';
             });
         }
     }

@@ -14,7 +14,8 @@ const AppState = (function() {
         lastUpdated: null,
         isLoading: false,
         errorMessage: null,
-        showTokenDialog: false
+        showTokenDialog: false,
+        showImportDialog: false
     };
 
     const listeners = [];

@@ -538,6 +538,99 @@ const App = (function() {
         }
     }
 
+    /**
+     * 导入笔记：解析 Markdown 文本，匹配任务名，填写备注
+     */
+    function parseAndImport(text, markCompleted) {
+        const state = AppState.getSnapshot();
+        const lines = text.split('\n').filter(l => l.trim());
+        let tasks = state.tasks.map(t => ({ ...t }));
+        let totalScore = state.totalScore;
+        let matched = 0;
+        const unmatched = [];
+
+        lines.forEach(line => {
+            // 清理前缀：- [ ]、- [x]、-、*、数字序号
+            let cleaned = line.trim()
+                .replace(/^-\s*\[[ x]\]\s*/i, '')
+                .replace(/^[-*•]\s+/, '')
+                .replace(/^\d+[.)、]\s*/, '');
+
+            // 用 ：或 : 分割任务名和内容
+            const sep = cleaned.match(/[：:]/);
+            if (!sep) {
+                if (cleaned) unmatched.push(cleaned);
+                return;
+            }
+
+            const taskName = cleaned.substring(0, sep.index).trim();
+            const note = cleaned.substring(sep.index + 1).trim();
+
+            if (!taskName || !note) {
+                if (cleaned) unmatched.push(cleaned);
+                return;
+            }
+
+            // 匹配任务：精确 > 包含（取第一个匹配）
+            let taskIndex = tasks.findIndex(t => t.name === taskName);
+            if (taskIndex < 0) {
+                taskIndex = tasks.findIndex(t =>
+                    t.name.includes(taskName) || taskName.includes(t.name)
+                );
+            }
+
+            if (taskIndex >= 0) {
+                const task = tasks[taskIndex];
+                // 填写备注（追加模式，如果已有内容则用分号隔开）
+                const newNote = task.note ? `${task.note}；${note}` : note;
+                tasks[taskIndex] = { ...task, note: newNote };
+
+                // 标记完成
+                if (markCompleted && !task.completed) {
+                    tasks[taskIndex].completed = true;
+                    // 增量更新总分
+                    totalScore += task.sipScore;
+                    if (task.isKeyTask) {
+                        totalScore += task.sipScore; // 抵消惩罚
+                    }
+                    totalScore = Math.max(0, totalScore);
+                }
+                matched++;
+            } else {
+                unmatched.push(taskName);
+            }
+        });
+
+        // 更新状态
+        AppState.update({
+            tasks: tasks,
+            totalScore: totalScore,
+            isDirty: true,
+            showImportDialog: false
+        });
+
+        Storage.setCache(state.currentDate, {
+            date: state.currentDate,
+            tasks: tasks,
+            totalScore: totalScore,
+            lastUpdated: new Date().toISOString()
+        });
+
+        // 显示结果提示
+        let msg = `✅ 已填写 ${matched} 条任务`;
+        if (unmatched.length > 0) {
+            msg += `，⚠️ ${unmatched.length} 条未匹配: ${unmatched.join('、')}`;
+        }
+        AppState.update({ errorMessage: msg });
+
+        // 3 秒后清除提示
+        setTimeout(() => {
+            if (AppState.get('errorMessage') === msg) {
+                AppState.update({ errorMessage: null });
+            }
+        }, 4000);
+    }
+
     // ── 内部工具 ──────────────────────────────────────
 
     /**
@@ -646,7 +739,7 @@ const App = (function() {
         UI.render(state);
     });
 
-    return { init, navigateToDate, onToggleTask, onUpdateNote, onSaveToken, onUpdate };
+    return { init, navigateToDate, onToggleTask, onUpdateNote, onSaveToken, onUpdate, parseAndImport };
 
 })();
 

@@ -537,7 +537,12 @@ body {
     font-size: 0.8rem;
 }
 
-.dialog-input {
+.dialog-wide {
+    max-width: 480px;
+}
+
+.dialog-input,
+.dialog-textarea {
     width: 100%;
     padding: 10px 14px;
     border: 2px solid var(--color-border);
@@ -546,11 +551,31 @@ body {
     font-family: var(--font-mono);
     margin-bottom: 16px;
     transition: border-color 0.15s;
+    resize: vertical;
+    line-height: 1.6;
 }
 
-.dialog-input:focus {
+.dialog-input:focus,
+.dialog-textarea:focus {
     outline: none;
     border-color: var(--color-primary);
+}
+
+.import-result {
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    margin-bottom: 12px;
+}
+
+.import-result.success {
+    background: var(--color-success-bg);
+    color: var(--color-success-text);
+}
+
+.import-result.warning {
+    background: #fef3c7;
+    color: #92400e;
 }
 
 .dialog-actions {
