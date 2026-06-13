@@ -9,7 +9,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 3,
-      "completed": false,
+      "completed": true,
       "note": "周报发老板，ppt美化"
     },
     {
@@ -20,7 +20,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 3,
-      "completed": false,
+      "completed": true,
       "note": "有色其他行业研报"
     },
     {
@@ -53,7 +53,7 @@
       "maxScore": 10,
       "isKeyTask": false,
       "sipScore": 3,
-      "completed": false,
+      "completed": true,
       "note": "尝试制作视频"
     },
     {
@@ -101,6 +101,6 @@
       "note": ""
     }
   ],
-  "totalScore": 23,
-  "lastUpdated": "2026-06-13T08:20:27.120Z"
+  "totalScore": 38,
+  "lastUpdated": "2026-06-13T09:39:00.189Z"
 }
