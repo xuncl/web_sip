@@ -9,7 +9,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 4,
-      "completed": false,
+      "completed": true,
       "note": "梳理重要不紧急事项，记笔记"
     },
     {
@@ -20,7 +20,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 4,
-      "completed": false,
+      "completed": true,
       "note": "了解铅锌行业，看一篇研报，写笔记"
     },
     {
@@ -31,7 +31,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 4,
-      "completed": false,
+      "completed": true,
       "note": "学习skill，cc"
     },
     {
@@ -53,7 +53,7 @@
       "maxScore": 10,
       "isKeyTask": false,
       "sipScore": 4,
-      "completed": false,
+      "completed": true,
       "note": "设定小说背景"
     },
     {
@@ -101,6 +101,6 @@
       "note": ""
     }
   ],
-  "totalScore": 41,
-  "lastUpdated": "2026-06-14T09:32:33.326Z"
+  "totalScore": 69,
+  "lastUpdated": "2026-06-14T13:58:03.237Z"
 }
