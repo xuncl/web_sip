@@ -42,7 +42,7 @@
       "maxScore": 10,
       "isKeyTask": false,
       "sipScore": 3,
-      "completed": false,
+      "completed": true,
       "note": "准备衣服枕头"
     },
     {
@@ -101,6 +101,6 @@
       "note": ""
     }
   ],
-  "totalScore": 38,
-  "lastUpdated": "2026-06-14T01:47:17.495Z"
+  "totalScore": 41,
+  "lastUpdated": "2026-06-14T09:32:33.326Z"
 }
