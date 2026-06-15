@@ -9,7 +9,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 5,
-      "completed": false,
+      "completed": true,
       "note": "完成会谈"
     },
     {
@@ -20,7 +20,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 5,
-      "completed": false,
+      "completed": true,
       "note": "继续了解铅锌行业"
     },
     {
@@ -31,7 +31,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 5,
-      "completed": false,
+      "completed": true,
       "note": "修改豁免项的逻辑"
     },
     {
@@ -42,7 +42,7 @@
       "maxScore": 10,
       "isKeyTask": false,
       "sipScore": 4,
-      "completed": false,
+      "completed": true,
       "note": "给家里打个电话"
     },
     {
@@ -101,6 +101,6 @@
       "note": ""
     }
   ],
-  "totalScore": 72,
-  "lastUpdated": "2026-06-15T01:01:34.028Z"
+  "totalScore": 106,
+  "lastUpdated": "2026-06-15T13:08:29.589Z"
 }
