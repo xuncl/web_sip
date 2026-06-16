@@ -1,0 +1,106 @@
+{
+  "date": "2026-06-16",
+  "tasks": [
+    {
+      "id": "work",
+      "name": "工作",
+      "baseScore": 2,
+      "increment": 1,
+      "maxScore": 15,
+      "isKeyTask": true,
+      "sipScore": 6,
+      "completed": true,
+      "note": "返回"
+    },
+    {
+      "id": "career",
+      "name": "事业",
+      "baseScore": 2,
+      "increment": 1,
+      "maxScore": 15,
+      "isKeyTask": true,
+      "sipScore": 6,
+      "completed": false,
+      "note": "制作铅锌行业报告"
+    },
+    {
+      "id": "self-improve",
+      "name": "自我提升",
+      "baseScore": 2,
+      "increment": 1,
+      "maxScore": 15,
+      "isKeyTask": true,
+      "sipScore": 6,
+      "completed": false,
+      "note": "DK十倍速学习笔记"
+    },
+    {
+      "id": "family",
+      "name": "家庭生活",
+      "baseScore": 2,
+      "increment": 1,
+      "maxScore": 10,
+      "isKeyTask": false,
+      "sipScore": 5,
+      "completed": false,
+      "note": "给老婆孩子买东西"
+    },
+    {
+      "id": "initiative",
+      "name": "主动性",
+      "baseScore": 2,
+      "increment": 1,
+      "maxScore": 10,
+      "isKeyTask": false,
+      "sipScore": 5,
+      "completed": false,
+      "note": "问AI自己应该主动做什么"
+    },
+    {
+      "id": "exercise",
+      "name": "锻炼节食",
+      "baseScore": 2,
+      "increment": 1,
+      "maxScore": 10,
+      "isKeyTask": false,
+      "sipScore": 4,
+      "completed": false,
+      "note": ""
+    },
+    {
+      "id": "early-rise",
+      "name": "早起",
+      "baseScore": 2,
+      "increment": 1,
+      "maxScore": 5,
+      "isKeyTask": false,
+      "sipScore": 4,
+      "completed": false,
+      "note": ""
+    },
+    {
+      "id": "daily-note",
+      "name": "日摘",
+      "baseScore": 2,
+      "increment": 1,
+      "maxScore": 5,
+      "isKeyTask": false,
+      "sipScore": 2,
+      "completed": false,
+      "note": ""
+    },
+    {
+      "id": "meditation",
+      "name": "思考冥想",
+      "baseScore": 2,
+      "increment": 1,
+      "maxScore": 5,
+      "isKeyTask": false,
+      "sipScore": 2,
+      "completed": false,
+      "note": ""
+    }
+  ],
+  "totalScore": 118,
+  "lastUpdated": "2026-06-16T06:53:59.933Z"
+}
