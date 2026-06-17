@@ -9,7 +9,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 7,
-      "completed": false,
+      "completed": true,
       "note": "周报"
     },
     {
@@ -20,7 +20,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 2,
-      "completed": false,
+      "completed": true,
       "note": "制作铅锌行业报告"
     },
     {
@@ -31,7 +31,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 2,
-      "completed": false,
+      "completed": true,
       "note": "DK十倍速笔记"
     },
     {
@@ -53,7 +53,7 @@
       "maxScore": 10,
       "isKeyTask": false,
       "sipScore": 5,
-      "completed": false,
+      "completed": true,
       "note": "问AI自己主动做什么"
     },
     {
@@ -101,6 +101,6 @@
       "note": ""
     }
   ],
-  "totalScore": 118,
-  "lastUpdated": "2026-06-17T00:25:17.500Z"
+  "totalScore": 145,
+  "lastUpdated": "2026-06-17T08:53:14.284Z"
 }
