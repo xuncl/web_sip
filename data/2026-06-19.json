@@ -9,7 +9,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 9,
-      "completed": false,
+      "completed": true,
       "note": "自查工作清单&管理计划"
     },
     {
@@ -20,7 +20,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 4,
-      "completed": false,
+      "completed": true,
       "note": "撰文一篇"
     },
     {
@@ -31,7 +31,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 2,
-      "completed": false,
+      "completed": true,
       "note": "十倍速"
     },
     {
@@ -42,7 +42,7 @@
       "maxScore": 10,
       "isKeyTask": false,
       "sipScore": 6,
-      "completed": false,
+      "completed": true,
       "note": "陪老人吃饭"
     },
     {
@@ -101,6 +101,6 @@
       "note": ""
     }
   ],
-  "totalScore": 180,
-  "lastUpdated": "2026-06-19T04:20:01.912Z"
+  "totalScore": 216,
+  "lastUpdated": "2026-06-19T14:24:15.793Z"
 }
