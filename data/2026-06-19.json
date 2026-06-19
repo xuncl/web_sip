@@ -9,8 +9,8 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 9,
-      "completed": true,
-      "note": "自查工作清单&管理计划"
+      "completed": false,
+      "note": ""
     },
     {
       "id": "career",
@@ -20,8 +20,8 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 4,
-      "completed": true,
-      "note": "撰文一篇"
+      "completed": false,
+      "note": ""
     },
     {
       "id": "self-improve",
@@ -30,9 +30,9 @@
       "increment": 1,
       "maxScore": 15,
       "isKeyTask": true,
-      "sipScore": 2,
-      "completed": true,
-      "note": "十倍速"
+      "sipScore": 4,
+      "completed": false,
+      "note": ""
     },
     {
       "id": "family",
@@ -42,8 +42,8 @@
       "maxScore": 10,
       "isKeyTask": false,
       "sipScore": 6,
-      "completed": true,
-      "note": "陪老人吃饭"
+      "completed": false,
+      "note": ""
     },
     {
       "id": "initiative",
@@ -54,7 +54,7 @@
       "isKeyTask": false,
       "sipScore": 6,
       "completed": false,
-      "note": "尝试制作小程序微信加抖音"
+      "note": ""
     },
     {
       "id": "exercise",
@@ -85,7 +85,7 @@
       "increment": 1,
       "maxScore": 5,
       "isKeyTask": false,
-      "sipScore": 2,
+      "sipScore": 3,
       "completed": false,
       "note": ""
     },
@@ -101,6 +101,6 @@
       "note": ""
     }
   ],
-  "totalScore": 216,
-  "lastUpdated": "2026-06-19T14:24:15.793Z"
+  "totalScore": 188,
+  "lastUpdated": "2026-06-19T14:25:42.718Z"
 }
