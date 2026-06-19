@@ -31,7 +31,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 3,
-      "completed": false,
+      "completed": true,
       "note": "DK十倍速"
     },
     {
@@ -86,7 +86,7 @@
       "maxScore": 5,
       "isKeyTask": false,
       "sipScore": 2,
-      "completed": false,
+      "completed": true,
       "note": ""
     },
     {
@@ -101,6 +101,6 @@
       "note": ""
     }
   ],
-  "totalScore": 180,
-  "lastUpdated": "2026-06-18T06:46:58.308Z"
+  "totalScore": 188,
+  "lastUpdated": "2026-06-19T04:15:47.045Z"
 }
