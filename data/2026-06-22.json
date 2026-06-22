@@ -1,0 +1,106 @@
+{
+  "date": "2026-06-22",
+  "tasks": [
+    {
+      "id": "work",
+      "name": "工作",
+      "baseScore": 2,
+      "increment": 1,
+      "maxScore": 15,
+      "isKeyTask": true,
+      "sipScore": 2,
+      "completed": false,
+      "note": ""
+    },
+    {
+      "id": "career",
+      "name": "事业",
+      "baseScore": 2,
+      "increment": 1,
+      "maxScore": 15,
+      "isKeyTask": true,
+      "sipScore": 2,
+      "completed": false,
+      "note": ""
+    },
+    {
+      "id": "self-improve",
+      "name": "自我提升",
+      "baseScore": 2,
+      "increment": 1,
+      "maxScore": 15,
+      "isKeyTask": true,
+      "sipScore": 2,
+      "completed": false,
+      "note": ""
+    },
+    {
+      "id": "family",
+      "name": "家庭生活",
+      "baseScore": 2,
+      "increment": 1,
+      "maxScore": 10,
+      "isKeyTask": false,
+      "sipScore": 7,
+      "completed": false,
+      "note": ""
+    },
+    {
+      "id": "initiative",
+      "name": "主动性",
+      "baseScore": 2,
+      "increment": 1,
+      "maxScore": 10,
+      "isKeyTask": false,
+      "sipScore": 6,
+      "completed": false,
+      "note": ""
+    },
+    {
+      "id": "exercise",
+      "name": "锻炼节食",
+      "baseScore": 2,
+      "increment": 1,
+      "maxScore": 10,
+      "isKeyTask": false,
+      "sipScore": 5,
+      "completed": false,
+      "note": ""
+    },
+    {
+      "id": "early-rise",
+      "name": "早起",
+      "baseScore": 2,
+      "increment": 1,
+      "maxScore": 5,
+      "isKeyTask": false,
+      "sipScore": 5,
+      "completed": false,
+      "note": ""
+    },
+    {
+      "id": "daily-note",
+      "name": "日摘",
+      "baseScore": 2,
+      "increment": 1,
+      "maxScore": 5,
+      "isKeyTask": false,
+      "sipScore": 3,
+      "completed": false,
+      "note": ""
+    },
+    {
+      "id": "meditation",
+      "name": "思考冥想",
+      "baseScore": 2,
+      "increment": 1,
+      "maxScore": 5,
+      "isKeyTask": false,
+      "sipScore": 2,
+      "completed": false,
+      "note": ""
+    }
+  ],
+  "totalScore": 208,
+  "lastUpdated": "2026-06-22T00:52:19.356Z"
+}
