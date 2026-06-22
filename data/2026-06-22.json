@@ -10,7 +10,7 @@
       "isKeyTask": true,
       "sipScore": 2,
       "completed": false,
-      "note": ""
+      "note": "回转窑事项"
     },
     {
       "id": "career",
@@ -21,7 +21,7 @@
       "isKeyTask": true,
       "sipScore": 2,
       "completed": false,
-      "note": ""
+      "note": "到政务大厅询问办理工作室流程"
     },
     {
       "id": "self-improve",
@@ -32,7 +32,7 @@
       "isKeyTask": true,
       "sipScore": 2,
       "completed": false,
-      "note": ""
+      "note": "经济危机的过度"
     },
     {
       "id": "family",
@@ -43,7 +43,7 @@
       "isKeyTask": false,
       "sipScore": 7,
       "completed": false,
-      "note": ""
+      "note": "送孩子去奶奶家&办理医保"
     },
     {
       "id": "initiative",
@@ -54,7 +54,7 @@
       "isKeyTask": false,
       "sipScore": 6,
       "completed": false,
-      "note": ""
+      "note": "了解微信和抖音小程序"
     },
     {
       "id": "exercise",
@@ -102,5 +102,5 @@
     }
   ],
   "totalScore": 208,
-  "lastUpdated": "2026-06-22T00:52:19.356Z"
+  "lastUpdated": "2026-06-22T00:52:52.700Z"
 }
