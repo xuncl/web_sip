@@ -10,7 +10,7 @@
       "isKeyTask": true,
       "sipScore": 3,
       "completed": false,
-      "note": ""
+      "note": "自应"
     },
     {
       "id": "career",
@@ -21,7 +21,7 @@
       "isKeyTask": true,
       "sipScore": 2,
       "completed": false,
-      "note": ""
+      "note": "查询办理工作室流程"
     },
     {
       "id": "self-improve",
@@ -32,7 +32,7 @@
       "isKeyTask": true,
       "sipScore": 3,
       "completed": false,
-      "note": ""
+      "note": "codex"
     },
     {
       "id": "family",
@@ -43,7 +43,7 @@
       "isKeyTask": false,
       "sipScore": 8,
       "completed": false,
-      "note": ""
+      "note": "照顾生病老婆"
     },
     {
       "id": "initiative",
@@ -54,7 +54,7 @@
       "isKeyTask": false,
       "sipScore": 6,
       "completed": false,
-      "note": ""
+      "note": "抖音和微信小程序"
     },
     {
       "id": "exercise",
@@ -102,5 +102,5 @@
     }
   ],
   "totalScore": 217,
-  "lastUpdated": "2026-06-25T00:49:13.676Z"
+  "lastUpdated": "2026-06-25T00:49:54.738Z"
 }
