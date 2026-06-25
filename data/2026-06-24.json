@@ -42,7 +42,7 @@
       "maxScore": 10,
       "isKeyTask": false,
       "sipScore": 7,
-      "completed": false,
+      "completed": true,
       "note": "给老婆按摩"
     },
     {
@@ -101,6 +101,6 @@
       "note": ""
     }
   ],
-  "totalScore": 210,
-  "lastUpdated": "2026-06-24T09:24:41.043Z"
+  "totalScore": 217,
+  "lastUpdated": "2026-06-25T00:49:04.046Z"
 }
