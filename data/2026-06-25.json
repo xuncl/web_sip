@@ -9,7 +9,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 3,
-      "completed": false,
+      "completed": true,
       "note": "自应"
     },
     {
@@ -20,7 +20,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 2,
-      "completed": false,
+      "completed": true,
       "note": "查询办理工作室流程"
     },
     {
@@ -31,7 +31,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 3,
-      "completed": false,
+      "completed": true,
       "note": "codex"
     },
     {
@@ -42,7 +42,7 @@
       "maxScore": 10,
       "isKeyTask": false,
       "sipScore": 8,
-      "completed": false,
+      "completed": true,
       "note": "照顾生病老婆"
     },
     {
@@ -101,6 +101,6 @@
       "note": ""
     }
   ],
-  "totalScore": 217,
-  "lastUpdated": "2026-06-25T00:49:54.738Z"
+  "totalScore": 241,
+  "lastUpdated": "2026-06-26T00:17:58.604Z"
 }
