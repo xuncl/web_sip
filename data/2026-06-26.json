@@ -10,7 +10,7 @@
       "isKeyTask": true,
       "sipScore": 4,
       "completed": false,
-      "note": ""
+      "note": "反应回转窑日期问题"
     },
     {
       "id": "career",
@@ -21,7 +21,7 @@
       "isKeyTask": true,
       "sipScore": 3,
       "completed": false,
-      "note": ""
+      "note": "去政务大厅问房本和办理的事情"
     },
     {
       "id": "self-improve",
@@ -32,7 +32,7 @@
       "isKeyTask": true,
       "sipScore": 4,
       "completed": false,
-      "note": ""
+      "note": "学习《人有人的用处》"
     },
     {
       "id": "family",
@@ -43,7 +43,7 @@
       "isKeyTask": false,
       "sipScore": 9,
       "completed": false,
-      "note": ""
+      "note": "打扫卫生"
     },
     {
       "id": "initiative",
@@ -54,7 +54,7 @@
       "isKeyTask": false,
       "sipScore": 6,
       "completed": false,
-      "note": ""
+      "note": "用codex设计小程序"
     },
     {
       "id": "exercise",
@@ -102,5 +102,5 @@
     }
   ],
   "totalScore": 241,
-  "lastUpdated": "2026-06-26T00:18:01.160Z"
+  "lastUpdated": "2026-06-26T00:20:25.972Z"
 }
