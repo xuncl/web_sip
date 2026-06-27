@@ -10,7 +10,7 @@
       "isKeyTask": true,
       "sipScore": 5,
       "completed": false,
-      "note": ""
+      "note": "开会"
     },
     {
       "id": "career",
@@ -21,7 +21,7 @@
       "isKeyTask": true,
       "sipScore": 4,
       "completed": false,
-      "note": ""
+      "note": "撰写本周的文章"
     },
     {
       "id": "self-improve",
@@ -32,7 +32,7 @@
       "isKeyTask": true,
       "sipScore": 2,
       "completed": false,
-      "note": ""
+      "note": "阅读并学习《人有人的用处》"
     },
     {
       "id": "family",
@@ -43,7 +43,7 @@
       "isKeyTask": false,
       "sipScore": 10,
       "completed": false,
-      "note": ""
+      "note": "给妈妈主动打电话"
     },
     {
       "id": "initiative",
@@ -54,7 +54,7 @@
       "isKeyTask": false,
       "sipScore": 6,
       "completed": false,
-      "note": ""
+      "note": "尝试用codex自己设计小程序"
     },
     {
       "id": "exercise",
@@ -102,5 +102,5 @@
     }
   ],
   "totalScore": 274,
-  "lastUpdated": "2026-06-27T00:25:12.465Z"
+  "lastUpdated": "2026-06-27T00:25:38.092Z"
 }
