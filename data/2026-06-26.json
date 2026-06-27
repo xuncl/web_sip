@@ -9,7 +9,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 4,
-      "completed": false,
+      "completed": true,
       "note": "反应回转窑日期问题"
     },
     {
@@ -20,7 +20,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 3,
-      "completed": false,
+      "completed": true,
       "note": "去政务大厅问房本和办理的事情"
     },
     {
@@ -42,7 +42,7 @@
       "maxScore": 10,
       "isKeyTask": false,
       "sipScore": 9,
-      "completed": false,
+      "completed": true,
       "note": "打扫卫生"
     },
     {
@@ -101,6 +101,6 @@
       "note": ""
     }
   ],
-  "totalScore": 251,
-  "lastUpdated": "2026-06-26T00:20:52.573Z"
+  "totalScore": 274,
+  "lastUpdated": "2026-06-27T00:25:02.768Z"
 }
