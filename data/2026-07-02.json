@@ -20,7 +20,7 @@
       "maxScore": 15,
       "isKeyTask": true,
       "sipScore": 2,
-      "completed": false,
+      "completed": true,
       "note": "发布镁期货文章到知乎（已写完，今天发，别再存着）；下午去工商银行办对公账户（已预约）；知乎回答 ≥2 个（保持节奏，单日涨粉已经验证）"
     },
     {
@@ -101,6 +101,6 @@
       "note": ""
     }
   ],
-  "totalScore": 294,
-  "lastUpdated": "2026-07-02T00:44:50.193Z"
+  "totalScore": 298,
+  "lastUpdated": "2026-07-02T01:55:17.001Z"
 }
